@@ -4,12 +4,16 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
+import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 @Configuration
 @EnableBatchProcessing
@@ -47,6 +51,30 @@ public class BatchConfiguration {
         reader.setLineMapper(lineMapper);
         return reader;
     }
+    @Bean
+    ProductProcessor processor() {
+        return new ProductProcessor();
+    }
+    @Bean
+    FlatFileItemWriter<Product> writer() {
+        //extractor
+        BeanWrapperFieldExtractor<Product> extractor = new BeanWrapperFieldExtractor<>();
+        //set field names
+        extractor.setNames(new String[] {"id", "quantity", "price"});
 
+        //set line aggregator to write item to a line
+        DelimitedLineAggregator<Product> aggregator = new DelimitedLineAggregator<>();
+        aggregator.setDelimiter(",");
+        aggregator.setFieldExtractor(extractor);
+
+
+        FlatFileItemWriter<Product> writer = new FlatFileItemWriter<>();
+        //writer target
+        writer.setResource(new FileSystemResource("output.csv"));
+        writer.setShouldDeleteIfExists(true);
+        writer.setLineAggregator(aggregator);
+
+        return writer;
+    }
 
 }
