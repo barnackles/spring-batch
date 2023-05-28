@@ -2,7 +2,6 @@ package com.kodilla.csvconverter;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -24,7 +23,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-@EnableBatchProcessing
+// Spring boot 3 batch autoconfiguration (including the automatic job execution at startup) is disabled when adding
+// @EnableBatchProcessing or extending DefaultBatchConfiguration.
+//@EnableBatchProcessing
 public class BatchConfiguration {
 
 //    private final JobBuilder jobBuilder;
@@ -104,10 +105,10 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Job changePriceJob(JobRepository jobRepository, Step step) {
+    Job changePriceJob(Step priceChange) {
         return new JobBuilder("changePriceJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .flow(step)
+                .flow(priceChange)
                 .end()
                 .build();
     }
